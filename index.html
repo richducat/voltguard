@@ -306,19 +306,88 @@
           </div>
         </div>
         <div class="p-10 md:w-1/2 bg-white">
-          <h3 class="text-xl font-bold text-slate-900 mb-3">Request service</h3>
-          <p class="text-slate-600 mb-5">Use this quick form so we capture the details we need and route it into our tracking sheet.</p>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">Claim your free consultation</h3>
+          <p class="text-slate-600 mb-4">
+            Free in-person consultation + system review for the <span class="font-semibold">first 30</span> properties that request service.
+          </p>
 
-          <a
-            href="https://docs.google.com/forms/d/e/1FAIpQLSemuhtkvhy4Noev3HFQAwaIbYmAk4u27ayrsXaDmg10vLTRqQ/viewform"
-            target="_blank"
-            rel="noopener"
-            class="block text-center w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition"
-          >
-            Request Assessment
-          </a>
+          <div id="vgWizard" class="space-y-4">
+            <div class="flex items-center justify-between text-xs text-slate-500">
+              <span id="vgStepLabel">Step 1 of 4</span>
+              <span class="font-mono" id="vgProgress">25%</span>
+            </div>
+            <div class="w-full h-2 bg-slate-100 rounded">
+              <div id="vgBar" class="h-2 bg-green-600 rounded" style="width:25%"></div>
+            </div>
 
-          <p class="text-xs text-slate-500 mt-3">Opens in a new tab.</p>
+            <!-- Step 1: basics -->
+            <div class="vg-step" data-step="1">
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                  <input id="vgName" type="text" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Property manager name" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Email <span class="text-red-600">*</span></label>
+                  <input id="vgEmail" type="email" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="you@company.com" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                  <input id="vgPhone" type="tel" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="(321) 555-1234" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: equipment -->
+            <div class="vg-step hidden" data-step="2">
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Charger brand</label>
+                  <select id="vgBrand" class="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <option value="">Select…</option>
+                    <option value="Tesla">Tesla</option>
+                    <option value="ChargePoint">ChargePoint</option>
+                    <option value="Blink">Blink</option>
+                    <option value="Wallbox">Wallbox</option>
+                    <option value="ClipperCreek">ClipperCreek</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Service address or ZIP</label>
+                  <input id="vgAddressOrZip" type="text" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="32940 or full address" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: issue -->
+            <div class="vg-step hidden" data-step="3">
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1">What’s going on?</label>
+                  <textarea id="vgIssue" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="4" placeholder="e.g. stations offline, payment failing, frayed cables…"></textarea>
+                  <p class="text-xs text-slate-500 mt-1">If there are safety hazards (frayed cables/exposed wiring), mark the unit out of service immediately.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4: confirm -->
+            <div class="vg-step hidden" data-step="4">
+              <div class="rounded-lg border border-slate-200 p-4 bg-slate-50">
+                <p class="text-sm text-slate-700"><span class="font-semibold">Offer:</span> Free in-person consultation + system review (first 30 submissions)</p>
+                <p class="text-xs text-slate-500 mt-2">We’ll respond within 48 hours.</p>
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <button id="vgBack" type="button" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold py-3 rounded-lg transition hidden">Back</button>
+              <button id="vgNext" type="button" class="w-2/3 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition">Next</button>
+            </div>
+
+            <p id="vgError" class="hidden text-sm text-red-700"></p>
+            <p id="vgSuccess" class="hidden text-sm text-green-700 font-semibold">Submitted — we’ll be in touch within 48 hours.</p>
+            <p class="text-xs text-slate-500">By submitting, you agree to be contacted about your request. No spam.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -334,6 +403,112 @@
 
   <script>
     lucide.createIcons();
+
+    // VoltGuard wizard → Google Sheet via Apps Script web app
+    (function(){
+      const ENDPOINT = 'https://script.google.com/macros/s/AKfycbyVvkbp2UeMLekaqoN7f5aSeOBJvXjbJNsxEKmugRsf1sKK2zE96nqomxzPZci5brYpWQ/exec';
+      const OFFER = 'Free in-person consultation + system review (first 30 submissions)';
+
+      const el = (id) => document.getElementById(id);
+      const wizard = el('vgWizard');
+      if (!wizard) return;
+
+      let step = 1;
+      const maxStep = 4;
+
+      const steps = Array.from(wizard.querySelectorAll('.vg-step'));
+
+      function showError(msg){
+        const e = el('vgError');
+        e.textContent = msg;
+        e.classList.remove('hidden');
+      }
+      function clearError(){
+        const e = el('vgError');
+        e.textContent = '';
+        e.classList.add('hidden');
+      }
+
+      function setStep(n){
+        step = Math.max(1, Math.min(maxStep, n));
+        steps.forEach(s => {
+          const is = Number(s.getAttribute('data-step')) === step;
+          s.classList.toggle('hidden', !is);
+        });
+
+        const pct = Math.round((step / maxStep) * 100);
+        el('vgStepLabel').textContent = `Step ${step} of ${maxStep}`;
+        el('vgProgress').textContent = `${pct}%`;
+        el('vgBar').style.width = `${pct}%`;
+
+        el('vgBack').classList.toggle('hidden', step === 1);
+        el('vgNext').textContent = step === maxStep ? 'Submit' : 'Next';
+      }
+
+      function getPayload(){
+        return {
+          origin: 'voltguard.homes',
+          offer: OFFER,
+          email: el('vgEmail').value,
+          name: el('vgName').value,
+          phone: el('vgPhone').value,
+          brand: el('vgBrand').value,
+          addressOrZip: el('vgAddressOrZip').value,
+          issue: el('vgIssue').value,
+          pageUrl: window.location.href,
+          userAgent: navigator.userAgent
+        };
+      }
+
+      async function submit(){
+        clearError();
+
+        const email = (el('vgEmail').value || '').trim();
+        if (!email) {
+          setStep(1);
+          showError('Email is required.');
+          return;
+        }
+
+        el('vgNext').disabled = true;
+        el('vgNext').classList.add('opacity-70');
+
+        try {
+          const res = await fetch(ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(getPayload())
+          });
+
+          const txt = await res.text();
+          let data = null;
+          try { data = JSON.parse(txt); } catch (_) {}
+
+          if (!res.ok || !data || data.ok !== true) {
+            throw new Error((data && data.error) ? data.error : 'submit_failed');
+          }
+
+          el('vgSuccess').classList.remove('hidden');
+          el('vgNext').textContent = 'Submitted';
+          el('vgBack').classList.add('hidden');
+        } catch (err) {
+          showError('Could not submit right now. Please try again in a minute.');
+          console.error(err);
+        } finally {
+          el('vgNext').disabled = false;
+          el('vgNext').classList.remove('opacity-70');
+        }
+      }
+
+      el('vgBack').addEventListener('click', () => { clearError(); setStep(step - 1); });
+      el('vgNext').addEventListener('click', () => {
+        clearError();
+        if (step < maxStep) return setStep(step + 1);
+        return submit();
+      });
+
+      setStep(1);
+    })();
   </script>
 </body>
 </html>
